@@ -1,0 +1,18 @@
+[project]
+name = "plex-video-manager"
+version = "0.1.0"
+description = "Project to manage downloaded videos for Plex Media Server. Note to use all functionality, both ffmpeg and mkvmerge must be installed and accessible on PATH"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "pymkv2>=2.3.2",
+    "pysrt>=1.1.2",
+]
+
+[project.scripts]
+plex_video_manager = "plex_video_manager.main:main"
+subtitle_manager = "plex_video_manager.subtitle_manager:main"
+format_manager = "plex_video_manager.format_manager:main"
+
+[tool.uv]
+package = true
