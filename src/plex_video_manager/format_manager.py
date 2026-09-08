@@ -48,7 +48,7 @@ def is_audio_format_required(video_file: str) -> bool:
     return False 
 
 
-def convert_audio_to_aac(video_file: str) -> None:
+def convert_audio_to_aac(video_file: str) -> Path:
     input_file = Path(video_file)
     output_file = f"{str(input_file.parent)}/{input_file.stem}-converted{input_file.suffix}"
     
@@ -64,7 +64,8 @@ def convert_audio_to_aac(video_file: str) -> None:
         output_file,
     ]
 
-    subprocess.run(command, check=True)
+    subprocess.run(command, check=True)  # Raises exception if error occurred. 
+    return Path(output_file)
 
 
 def handle_new_download(content_path: str, category: str, tag: str|None = None):
@@ -85,24 +86,26 @@ def handle_tv_show_download(content_path: str, tag: str):
     content = Path(content_path)
 
     if content.is_file():
+        # First do the audio conversion if necessary
+        if is_audio_format_required(content_path):
+            working_file = convert_audio_to_aac(content_path)
+            content.unlink()  # No longer need the original, get rid of it
+        else:
+            # No audio conversion occurred, keep using original file
+            working_file = content
+
         # First make base directory (if doesn't already exist)
-        base_show_directory = Path(f"{str(content.parent)}/{tag}/")
+        base_show_directory = Path(f"{str(working_file.parent)}/{tag}/")
         base_show_directory.mkdir(parents=True, exist_ok=True)
         
         # Find season and episode number, then rename file and place into show directory 
-        formatted_file_name = rename_tv_show_episode(tag, content)
+        formatted_file_name = rename_tv_show_episode(tag, working_file)
         new_file_dest = base_show_directory / formatted_file_name
-        content.rename(new_file_dest)
-
-        # Now we can perform audio conversion on the file.
-        # TODO: Convert audio on file.
+        working_file.rename(new_file_dest)
 
     elif content.is_dir():
         print("Handle dir")
         # TODO handle directory
-
-
-
         
     else:
         raise ValueError(f"Content is not file or directory at path '{content_path}'")
