@@ -6,5 +6,9 @@ dist/
 wheels/
 *.egg-info
 
+.env
+
 # Virtual environments
 .venv
+
+src/plex_video_manager/resources/

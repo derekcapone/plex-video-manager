@@ -85,7 +85,7 @@ def handle_tv_show_download(content_path: str, tag: str):
     print(f"Handling newly downloaded TV show. Root path: '{content_path}', tag: '{tag}'")
     content = Path(content_path)
 
-    if content.is_file():
+    if content.is_file() and content.suffix == ".mkv":
         # First do the audio conversion if necessary
         if is_audio_format_required(content_path):
             working_file = convert_audio_to_aac(content_path)
@@ -94,7 +94,7 @@ def handle_tv_show_download(content_path: str, tag: str):
             # No audio conversion occurred, keep using original file
             working_file = content
 
-        # First make base directory (if doesn't already exist)
+        # make base directory (if doesn't already exist)
         base_show_directory = Path(f"{str(working_file.parent)}/{tag}/")
         base_show_directory.mkdir(parents=True, exist_ok=True)
         
@@ -104,8 +104,24 @@ def handle_tv_show_download(content_path: str, tag: str):
         working_file.rename(new_file_dest)
 
     elif content.is_dir():
-        print("Handle dir")
-        # TODO handle directory
+        base_dir = content
+        base_show_directory = Path(base_dir.parent / Path(tag) / base_dir.name)
+        base_show_directory.mkdir(parents=True, exist_ok=True)
+        base_dir.rename(base_show_directory)
+        print(f"Base show dir: {base_show_directory}")
+
+        for mkv_file in base_show_directory.rglob('*.mkv'):
+            print(f"Processing file: {str(mkv_file.name)}")
+            if is_audio_format_required(str(mkv_file)):
+                working_file = convert_audio_to_aac(str(mkv_file))
+                mkv_file.unlink()  # No longer need the original, get rid of it
+            else:
+                # No audio conversion occurred, keep using original file
+                working_file = mkv_file
+
+            formatted_file_name = rename_tv_show_episode(tag, working_file)
+            new_file_dest = base_show_directory / formatted_file_name
+            working_file.rename(new_file_dest)
         
     else:
         raise ValueError(f"Content is not file or directory at path '{content_path}'")
@@ -114,7 +130,8 @@ def handle_tv_show_download(content_path: str, tag: str):
 def rename_tv_show_episode(show_name: str, original_file: Path) -> Path:
     match = re.search(r"S(\d{2})E(\d{2})", original_file.name, re.IGNORECASE)
     if not match: 
-        raise ValueError(f"Can't determine season/episode from content path: {original_file.name}")
+        print(f"Can't determine season/episode from content path: {original_file.name}. Ignoring rename.")
+        return original_file
 
     episode_identifier = match.group(0)
     return Path(f"{show_name}-{episode_identifier}{original_file.suffix}")
@@ -126,7 +143,7 @@ if __name__ == "__main__":
     # args = parser.parse_args()
 
     # video_file = args.file  
-    video_file = "/home/derek/Desktop/Projects/plex-video-manager/src/plex_video_manager/resources/FuturamaS10E03.mkv"
+    video_file = "/home/derek/Desktop/Projects/plex-video-manager/src/plex_video_manager/resources/FuturamaS03-DownloadedDir/"
     tag = "Futurama"
 
     handle_tv_show_download(video_file, tag)

@@ -1,5 +1,4 @@
 #!/bin/bash
-
 LOG="/home/derek/logs/qbittorrent-postprocess.log"
 echo "===== $(date) =====" >> "$LOG"
 
