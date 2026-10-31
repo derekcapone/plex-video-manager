@@ -12,9 +12,12 @@ dependencies = [
 ]
 
 [project.scripts]
-plex_video_manager = "plex_video_manager.main:main"
-subtitle_manager = "plex_video_manager.subtitle_manager:main"
-format_manager = "plex_video_manager.format_manager:main"
+plex_video_manager = "plex_video_manager.download_handler:main"
 
 [tool.uv]
 package = true
+
+[dependency-groups]
+dev = [
+    "pytest>=9.2.0",
+]
